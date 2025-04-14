@@ -115,7 +115,7 @@ func ForwarderMessage(c *gin.Context) {
 		return
 	}
 	// sign 比对
-	if forwarderMsgData.Sign != "梅干小小酥饼" {
+	if forwarderMsgData.Sign != "梅干菜小酥饼" {
 		c.JSON(http.StatusOK, gin.H{
 			"code": -1,
 			"msg":  404,
@@ -135,7 +135,7 @@ func ForwarderMessage(c *gin.Context) {
 		"code": 200,
 		"msg":  "success",
 	})
-	
+
 }
 
 func MessageCodeProcess(content string) string {
