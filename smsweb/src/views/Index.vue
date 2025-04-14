@@ -181,7 +181,7 @@ const messages = ref([]);
 // 获取短信（模拟数据）
 const getMessage = async (num) => {
   try {
-    const response = await requests.post('/api/getMessages',{
+    const response = await requests.post('/sms/query',{
         phone: num
     });
     getMessagesData = response.data

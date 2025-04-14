@@ -20,6 +20,25 @@ func GetMessages(c *gin.Context) {
 			"msg":  err.Error(),
 		})
 	}
+	if recInfo.Location == 0 {
+		keyword := fmt.Sprintf("phone = \"%s\"", recInfo.Phone)
+		var param models.QueryParams
+		param.PageSize = 1
+		param.Keyword = keyword
+		msg := models.GetMessageCode(param)
+		if msg.Code == "None" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code": -1,
+				"msg":  404,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code": 200,
+			"data": msg.Code,
+		})
+		return
+	}
 
 	fmt.Println("获取到的手机号：", recInfo.Phone)
 	keyword := fmt.Sprintf("alias = \"%s\"", recInfo.Phone)
@@ -122,7 +141,8 @@ func ForwarderMessage(c *gin.Context) {
 		})
 		return
 	}
-	code := MessageCodeProcess(forwarderMsgData.Number)
+	code := MessageCodeProcess(forwarderMsgData.Content)
+	fmt.Println(code)
 	err = models.SaveMessage(forwarderMsgData.Phone, forwarderMsgData.Number, forwarderMsgData.Content, code)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
