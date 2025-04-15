@@ -20,25 +20,6 @@ func GetMessages(c *gin.Context) {
 			"msg":  err.Error(),
 		})
 	}
-	if recInfo.Location == 0 {
-		keyword := fmt.Sprintf("phone = \"%s\"", recInfo.Phone)
-		var param models.QueryParams
-		param.PageSize = 1
-		param.Keyword = keyword
-		msg := models.GetMessageCode(param)
-		if msg.Code == "None" {
-			c.JSON(http.StatusNotFound, gin.H{
-				"code": -1,
-				"msg":  404,
-			})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"code": 200,
-			"data": msg.Code,
-		})
-		return
-	}
 
 	fmt.Println("获取到的手机号：", recInfo.Phone)
 	keyword := fmt.Sprintf("alias = \"%s\"", recInfo.Phone)
@@ -182,4 +163,34 @@ func MessageCodeProcess(content string) string {
 		return code[0]
 	}
 	return "None"
+}
+
+func GetVerifyCode(c *gin.Context) {
+	recInfo := new(getMessageRequest)
+	err := c.ShouldBind(recInfo)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  err.Error(),
+		})
+	}
+
+	keyword := fmt.Sprintf("phone = \"%s\"", recInfo.Phone)
+	var param models.QueryParams
+	param.PageSize = 1
+	param.Keyword = keyword
+	msg := models.GetMessageCode(param)
+	if msg.Code == "None" {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code": -1,
+			"msg":  404,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": msg.Code,
+	})
+	return
+
 }

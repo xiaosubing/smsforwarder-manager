@@ -49,6 +49,5 @@ type SendMessageData struct {
 }
 
 type getMessageRequest struct {
-	Phone    string `json:"phone"`
-	Location int    `json:"location"`
+	Phone string `json:"phone"`
 }

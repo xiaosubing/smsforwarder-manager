@@ -15,5 +15,6 @@ func App() *gin.Engine {
 	r.POST("/api/sendMessages", service.SendMessages)
 	r.POST("/api/getPhones", service.GetPhones)
 	r.POST("/api/forwarderMessage", service.ForwarderMessage)
+	r.POST("/api/getCode", service.GetVerifyCode)
 	return r
 }
