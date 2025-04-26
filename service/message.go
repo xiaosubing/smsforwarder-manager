@@ -24,6 +24,7 @@ func GetMessages(c *gin.Context) {
 	fmt.Println("获取到的手机号：", recInfo.Phone)
 	keyword := fmt.Sprintf("alias = \"%s\"", recInfo.Phone)
 	phone := models.QueryPhoneDataSign(keyword, 0)
+	fmt.Println(phone)
 	fmt.Println(phone.IP)
 	url := fmt.Sprintf("http://%s:5000/sms/query", phone.IP)
 
@@ -31,20 +32,37 @@ func GetMessages(c *gin.Context) {
   "data": {
     "type": 1,
     "page_num": 1,
-    "page_size": 5,
+    "page_size": 10,
     "keyword": ""
   },
   "timestamp": 1652590258638,
   "sign": ""
 }`
 	req := HttpPost(url, payload)
-
 	var m []Message
+	var messages []map[string]string
 	err = json.Unmarshal([]byte(req), &m)
 	if err != nil {
-		fmt.Println(err)
+		if strings.Contains(err.Error(), "cannot") {
+			var m AndroidMessage
+			err = json.Unmarshal([]byte(req), &m)
+			if err != nil {
+				fmt.Println(err.Error())
+				fmt.Println("安卓短信解析失败")
+				return
+			}
+			for _, info := range m.Data {
+				message := map[string]string{
+					"sender":  info.Number,
+					"content": info.Content,
+				}
+				messages = append(messages, message)
+				fmt.Println(info)
+			}
+			c.JSON(http.StatusOK, messages)
+			return
+		}
 	}
-	var messages []map[string]string
 	for _, info := range m {
 
 		message := map[string]string{

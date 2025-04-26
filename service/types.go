@@ -19,6 +19,13 @@ type sendMessageData struct {
 	Num     string `json:"num"`
 }
 
+// changepwd
+type ChangePassword struct {
+	Username    string `json:"username"`
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+}
+
 // ForwarderMessage
 type ForwarderMessageData struct {
 	Phone   string `json:"phone"`
@@ -34,6 +41,25 @@ type Message struct {
 	Number  string `gorm:"size:128"`
 	Content string `gorm:"type:text"`
 	Code    string `gorm:"size:10"`
+}
+
+// forwarder 消息模型
+
+type AndroidMessage struct {
+	Timestamp int64                `json:"timestamp"`
+	Code      int                  `json:"code"`
+	Msg       string               `json:"msg"`
+	Data      []AndroidMessageData `json:"data"`
+}
+type AndroidMessageData struct {
+	Content     string `json:"content"`
+	Date        int64  `json:"date"`
+	Name        string `json:"name"`
+	Number      string `json:"number"`
+	SimID       int    `json:"sim_id"`
+	SubID       int    `json:"sub_id"`
+	Type        int    `json:"type"`
+	TypeImageID int    `json:"typeImageId"`
 }
 
 // 发短信

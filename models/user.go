@@ -1,6 +1,8 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func GetUserInfo(username, password string) *User {
 	var user User
@@ -52,4 +54,19 @@ func QueryUser(keyword string, size int) []User {
 		return nil
 	}
 	return user
+}
+
+func ChagePwd(username, oldpassword, newpassword string) error {
+	var u User
+
+	condtition := User{Username: username, Password: oldpassword}
+	data := User{Password: newpassword}
+
+	err := UpdateData[User](&u, condtition, data)
+	if err != nil {
+		// 处理错误
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
 }

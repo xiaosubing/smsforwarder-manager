@@ -1,11 +1,63 @@
 <template>
-<!--  <div class="nav">-->
-<!--    <h1 class="logo">后台管理页面</h1>-->
-<!--    <div class="nav-buttons">-->
-<!--      <button class="change-admin-passwd" @click="changePassword">修改登录密码</button>-->
+  <div class="nav">
+    <h1 class="logo">后台管理页面</h1>
+    <div class="nav-buttons">
+      <button class="change-admin-passwd" @click="changePassword">修改登录密码</button>
 <!--      <button class="refresh-phone-info" @click="refreshPhoneNumbers">重新获取手机号信息</button>-->
-<!--    </div>-->
-<!--  </div>-->
+    </div>
+  </div>
+
+  <!-- 密码修改弹窗 -->
+  <div v-if="showPasswordDialog" class="password-dialog">
+    <div class="dialog-content">
+      <h3>修改登录密码</h3>
+      <form @submit.prevent="submitPasswordChange">
+        <div class="form-group">
+          <label>当前密码：</label>
+          <input
+              v-model="currentPassword"
+              type="password"
+              placeholder="请输入当前密码"
+              required
+          >
+        </div>
+        <div class="form-group">
+          <label>新密码：</label>
+          <input
+              v-model="newPassword"
+              type="password"
+              placeholder="请输入新密码"
+              required
+          >
+        </div>
+        <div class="form-group">
+          <label>确认新密码：</label>
+          <input
+              v-model="confirmNewPassword"
+              type="password"
+              placeholder="请再次输入新密码"
+              required
+          >
+        </div>
+        <div v-if="passwordError" class="error-message">{{ passwordError }}</div>
+        <div class="button-group">
+          <button type="button" @click="cancelPasswordChange">取消</button>
+          <button type="submit">确认修改</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 密码修改成功提示 -->
+  <div v-if="showPasswordSuccess" class="success-dialog">
+    <div class="dialog-content">
+      <h3>修改成功</h3>
+      <p>密码已成功修改，请使用新密码登录。</p>
+      <div class="button-group">
+        <button @click="showPasswordSuccess = false">确认</button>
+      </div>
+    </div>
+  </div>
 
   <div class="container">
     <!-- 在容器内添加加载提示 -->
@@ -111,7 +163,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import requests from "../api/request.ts";
-import { onMounted } from 'vue';  // 关键导入
+import { onMounted } from 'vue';
+import {userInfoStore} from "../store/user.js";
+import router from "../router/router.js";  // 关键导入
 
 // ▋响应式数据
 const selected = ref(null)
@@ -134,8 +188,76 @@ const sendMessageSuccess = ref(false)
 let sendMessagePhoneNumber = ""
 
 onMounted(() => {
-  fetchPhoneNumbers()
+  const store = userInfoStore()
+  let isLogin = store.isLogin
+
+  if (!isLogin) {
+   router.push({name: 'login'})
+  }else {
+    fetchPhoneNumbers()
+  }
+
 })
+
+// 密码修改相关状态
+const showPasswordDialog = ref(false)
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmNewPassword = ref('')
+const passwordError = ref('')
+const showPasswordSuccess = ref(false)
+
+// change passwd
+const  changePassword = async ()=> {
+  showPasswordDialog.value = true
+
+}
+
+// 修改密码方法
+const submitPasswordChange = async () => {
+  // 验证两次输入的新密码是否一致
+  if (newPassword.value !== confirmNewPassword.value) {
+    passwordError.value = '两次输入的新密码不一致'
+    return
+  }
+
+  try {
+    const store = userInfoStore()
+    const username = store.username // 假设store中有用户名
+    console.log(username)
+    const response = await requests.post("/api/user/changePwd", {
+      username: username,
+      old_password: currentPassword.value,
+      new_password: newPassword.value
+    })
+
+    if (response.status === 200) {
+      // 修改成功
+      showPasswordDialog.value = false
+      showPasswordSuccess.value = true
+      // 清空表单
+      currentPassword.value = ''
+      newPassword.value = ''
+      confirmNewPassword.value = ''
+      passwordError.value = ''
+    } else {
+      // 处理错误响应
+      passwordError.value = response.data.message || '密码修改失败'
+    }
+  } catch (error) {
+    console.error('密码修改失败:', error)
+    passwordError.value = '请求失败，请检查网络连接'
+  }
+}
+
+// 取消修改密码
+const cancelPasswordChange = () => {
+  showPasswordDialog.value = false
+  currentPassword.value = ''
+  newPassword.value = ''
+  confirmNewPassword.value = ''
+  passwordError.value = ''
+}
 
 
 
@@ -239,19 +361,24 @@ const cancelSend = () => {
 
 /* 导航条样式 */
 .nav {
+  position: relative;
+  background: white;
+  color: #1E90FF;
+  border: 1px solid #1E90FF;
+  box-shadow: 0 0 8px #1E90FF40;
+  padding: 12px 20px;
+  border-radius: 8px;
+  transition: all 0.3s;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
-  height: 60px;
-  background: linear-gradient(135deg, #1E90FF, #0066CC);
-  color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  margin: 0 20px;
 }
 
+.nav button {
+  color: #1E90FF;
+  text-align: right;
+}
 .logo {
   margin: 0;
   font-size: 1.5rem;
@@ -520,4 +647,87 @@ th {
   z-index: 1000; /* 确保在最上层 */
 }
 
+
+/* // 修改密码 */
+/* 密码修改弹窗样式 - 复用已有的弹窗样式 */
+.password-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.dialog-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #ff4d4f;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.button-group button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.button-group button[type="submit"] {
+  background: #1E90FF;
+  color: white;
+}
+
+.button-group button[type="button"] {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.button-group button:hover {
+  opacity: 0.9;
+}
+
+/* 响应式适配 */
+@media (max-width: 480px) {
+  .dialog-content {
+    width: 90%;
+    padding: 1rem;
+  }
+}
 </style>

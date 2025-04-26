@@ -12,9 +12,10 @@ func App() *gin.Engine {
 
 	r.POST("/api/login", service.Login)
 	r.POST("/sms/query", service.GetMessages)
-	r.POST("/api/sendMessages", service.SendMessages)
+	r.POST("/sms/send", service.SendMessages)
 	r.POST("/api/getPhones", service.GetPhones)
 	r.POST("/api/forwarderMessage", service.ForwarderMessage)
 	r.POST("/api/getCode", service.GetVerifyCode)
+	r.POST("/api/user/changePwd", service.ChangePwd)
 	return r
 }
